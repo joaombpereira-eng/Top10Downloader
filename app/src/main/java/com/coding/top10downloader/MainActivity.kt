@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -40,19 +41,35 @@ class MainActivity : AppCompatActivity() {
     private var feedUrl: String = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml"
     private var feedLimit = 10
 
+    private var feedCachedURL = "INVALIDATED"
+    private val STATE_URL = "feedUrl"
+    private val STATE_LIMIT = "feedLimit"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        Log.d(TAG, "onCreate: Called")
+
+        if (savedInstanceState != null) {
+            feedUrl = savedInstanceState.getString(STATE_URL).toString()
+            feedLimit = savedInstanceState.getInt(STATE_LIMIT)
+        }
 
         downloadURL(feedUrl.format(feedLimit)) //Put the feedLimit in the %d of the feedURL
         Log.d(TAG, "onCreate: Done")
     }
 
     private fun downloadURL(feedURL: String) {
-        Log.d(TAG, "downloadURL: Starting AsyncTask")
-        downloadData = DownloadData(this, xmlListView)
-        downloadData?.execute(feedURL)
-        Log.d(TAG, "downloadURL: Done")
+        if (feedURL != feedCachedURL){
+            Log.d(TAG, "downloadURL: Starting AsyncTask")
+            downloadData = DownloadData(this, xmlListView)
+            downloadData?.execute(feedURL)
+            feedCachedURL = feedURL
+            Log.d(TAG, "downloadURL: Done")
+        } else {
+            Log.d(TAG, "downloadURL: URL not changed")
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -81,11 +98,22 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "onOptionsItemSelected: ${item.title} setting feedLimit unchanged")
                 }
             }
+            R.id.mnuRefresh -> feedCachedURL = "INVALIDATED"
             else -> return super.onOptionsItemSelected(item)
         }
 
         downloadURL(feedUrl.format(feedLimit))
         return true
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_URL, feedUrl)
+        outState.putInt(STATE_LIMIT, feedLimit)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
     }
 
     override fun onDestroy() {
