@@ -5,11 +5,14 @@ import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.ArrayAdapter
 import android.widget.ListView
 import kotlinx.android.synthetic.main.activity_main.*
 import java.net.URL
 import kotlin.properties.Delegates
+
+/**
+ * Um aplicação que pode exibir informações de um RSS feed com a criação de um Custom Adapter, personalizando a exibição do RSS feed.
+ */
 
 class FeedEntry {
     var name: String = ""
@@ -38,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         Log.d(TAG, "OnCreate: Called")
-        downloadData.execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=25/xml")
+        downloadData.execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml")
         Log.d(TAG, "OnCreate: Done")
     }
 
@@ -65,14 +68,8 @@ class MainActivity : AppCompatActivity() {
                 val parseApplications = ParseApplications()
                 parseApplications.parse(result)
 
-//                val arrayAdapter = ArrayAdapter<FeedEntry>(
-//                    propContext,
-//                    R.layout.list_item,
-//                    parseApplications.applications
-//                )
-//                propListView.adapter = arrayAdapter
-
-                val feedAdapter = FeedAdapter(propContext, R.layout.list_record, parseApplications.applications)
+                val feedAdapter =
+                    FeedAdapter(propContext, R.layout.list_record, parseApplications.applications)
                 propListView.adapter = feedAdapter
             }
 
