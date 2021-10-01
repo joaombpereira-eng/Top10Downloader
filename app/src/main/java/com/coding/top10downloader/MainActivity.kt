@@ -35,14 +35,16 @@ class FeedEntry {
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
-
     private var downloadData: DownloadData? = null
+
+    private var feedUrl: String = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml"
+    private var feedLimit = 10
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        downloadURL("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml")
+        downloadURL(feedUrl.format(feedLimit)) //Put the feedLimit in the %d of the feedURL
         Log.d(TAG, "onCreate: Done")
     }
 
@@ -55,18 +57,34 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.feeds_menu, menu) //Create the menu in the layout
+
+        if (feedLimit == 10) {
+            menu?.findItem(R.id.mnu10)?.isChecked = true
+        } else {
+            menu?.findItem(R.id.mnu25)?.isChecked = true
+        }
+
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val feedUrl: String = when(item.itemId){
-            R.id.mnuFree -> "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml"
-            R.id.mnuPay -> "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=10/xml"
-            R.id.mnuSongs -> "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=10/xml"
-            else -> return  super.onOptionsItemSelected(item)
+        when(item.itemId){
+            R.id.mnuFree -> feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml"
+            R.id.mnuPay -> feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=%d/xml"
+            R.id.mnuSongs -> feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=%d/xml"
+            R.id.mnu10, R.id.mnu25 -> {
+                if(!item.isChecked) {
+                    item.isChecked = true
+                    feedLimit = 35 - feedLimit
+                    Log.d(TAG, "onOptionsItemSelected: ${item.title} setting feedLimit to $feedLimit")
+                } else {
+                    Log.d(TAG, "onOptionsItemSelected: ${item.title} setting feedLimit unchanged")
+                }
+            }
+            else -> return super.onOptionsItemSelected(item)
         }
 
-        downloadURL(feedUrl)
+        downloadURL(feedUrl.format(feedLimit))
         return true
     }
 
